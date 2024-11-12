@@ -1,0 +1,437 @@
+<sdf version='1.11'>
+
+  <world name="car_world">
+    <physics name="1ms" type="ignored">
+        <max_step_size>0.001</max_step_size>
+        <real_time_factor>1.0</real_time_factor>
+    </physics>
+    <plugin
+        filename="gz-sim-physics-system"
+        name="gz::sim::systems::Physics">
+    </plugin>
+    <plugin
+        filename="gz-sim-user-commands-system"
+        name="gz::sim::systems::UserCommands">
+    </plugin>
+    <plugin
+        filename="gz-sim-scene-broadcaster-system"
+        name="gz::sim::systems::SceneBroadcaster">
+    </plugin>
+    
+    <light type="directional" name="sun">
+        <cast_shadows>true</cast_shadows>
+        <pose>0 0 10 0 0 0</pose>
+        <diffuse>0.8 0.8 0.8 1</diffuse>
+        <specular>0.2 0.2 0.2 1</specular>
+        <attenuation>
+            <range>1000</range>
+            <constant>0.9</constant>
+            <linear>0.01</linear>
+            <quadratic>0.001</quadratic>
+        </attenuation>
+        <direction>-0.5 0.1 -0.9</direction>
+    </light>
+
+    <model name="ground_plane">
+      <static>true</static>
+      <link name="link">
+          <collision name="collision">
+          <geometry>
+              <plane>
+              <normal>0 0 1</normal>
+              </plane>
+          </geometry>
+          </collision>
+          <visual name="visual">
+          <geometry>
+              <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+              </plane>
+          </geometry>
+          <material>
+              <ambient>0.8 0.8 0.8 1</ambient>
+              <diffuse>0.8 0.8 0.8 1</diffuse>
+              <specular>0.8 0.8 0.8 1</specular>
+          </material>
+          </visual>
+      </link>
+    </model>
+
+    <model name='aubo_i5'>
+      <joint name='world_joint' type='fixed'>
+        <pose relative_to='__model__'>0 0 0 0 0 0</pose>
+        <parent>world</parent>
+        <child>base_link</child>
+      </joint>
+      <link name='base_link'>
+        <pose relative_to='world_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>-1.4794999999999999e-13 0.0015384000000000001 0.020951000000000001 0 0 0</pose>
+          <mass>0.83418999999999999</mass>
+          <inertia>
+            <ixx>0.0014414</ixx>
+            <ixy>7.8809000000000007e-15</ixy>
+            <ixz>8.5328000000000003e-16</ixz>
+            <iyy>0.0013542000000000001</iyy>
+            <iyz>-1.4364e-05</iyz>
+            <izz>0.0024659</izz>
+          </inertia>
+        </inertial>
+        <collision name='base_link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/base_link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='base_link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/base_link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+      <joint name='shoulder_joint' type='revolute'>
+        <pose relative_to='base_link'>0 0 0.122 0 0 -3.1415853071795872</pose>
+        <parent>base_link</parent>
+        <child>shoulder_Link</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3.04</lower>
+            <upper>3.04</upper>
+            <effort>0</effort>
+            <velocity>0</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='shoulder_Link'>
+        <pose relative_to='shoulder_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>3.2508868974735e-07 0.0053495534929606497 -0.00883689325611056 0 0 0</pose>
+          <mass>1.5765834869392901</mass>
+          <inertia>
+            <ixx>0.0040640448663128003</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.0039286323846681702</iyy>
+            <iyz>-0.00016015164285142501</iyz>
+            <izz>0.0030869857349184</izz>
+          </inertia>
+        </inertial>
+        <collision name='shoulder_Link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/shoulder_Link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='shoulder_Link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/shoulder_Link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+      <joint name='upperArm_joint' type='revolute'>
+        <pose relative_to='shoulder_Link'>0 0.1215 0 1.5707926536057681 -1.5707926536662187 3.1415926535746808</pose>
+        <parent>shoulder_Link</parent>
+        <child>upperArm_Link</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3.04</lower>
+            <upper>3.04</upper>
+            <effort>0</effort>
+            <velocity>0</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='upperArm_Link'>
+        <pose relative_to='upperArm_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>0.203996646979614 2.0130458503654401e-10 0.0127641545395984 0 0 0</pose>
+          <mass>4.0417578226549402</mass>
+          <inertia>
+            <ixx>0.0096539921110620399</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.144993869035655</iyy>
+            <iyz>0</iyz>
+            <izz>0.142607184038966</izz>
+          </inertia>
+        </inertial>
+        <collision name='upperArm_Link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/upperArm_Link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='upperArm_Link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/upperArm_Link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+      <joint name='foreArm_joint' type='revolute'>
+        <pose relative_to='upperArm_Link'>0.40799999999999997 0 0 3.1415853071795872 -5.1632000000000012e-18 -5.4590000000000015e-16</pose>
+        <parent>upperArm_Link</parent>
+        <child>foreArm_Link</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3.04</lower>
+            <upper>3.04</upper>
+            <effort>0</effort>
+            <velocity>0</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='foreArm_Link'>
+        <pose relative_to='foreArm_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>0.188922115560337 6.7888243473907202e-07 0.098102674046155705 0 0 0</pose>
+          <mass>2.2714566909834302</mass>
+          <inertia>
+            <ixx>0.00214322284946289</ixx>
+            <ixy>0</ixy>
+            <ixz>-0.00073120631553383005</ixz>
+            <iyy>0.0443926090878205</iyy>
+            <iyz>0</iyz>
+            <izz>0.044127379712836499</izz>
+          </inertia>
+        </inertial>
+        <collision name='foreArm_Link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/foreArm_Link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='foreArm_Link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/foreArm_Link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+      <joint name='wrist1_joint' type='revolute'>
+        <pose relative_to='foreArm_Link'>0.376 0 0 -3.1415853071795872 -1.8323008244675552e-15 1.5708</pose>
+        <parent>foreArm_Link</parent>
+        <child>wrist1_Link</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3.04</lower>
+            <upper>3.04</upper>
+            <effort>0</effort>
+            <velocity>0</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='wrist1_Link'>
+        <pose relative_to='wrist1_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>7.5420513742859202e-07 0.0062481254331256996 -0.0039236746407237304 0 0 0</pose>
+          <mass>0.50047753918876403</mass>
+          <inertia>
+            <ixx>0.00071194605962081</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00040588242872957998</iyy>
+            <iyz>-2.3080869437751201e-05</iyz>
+            <izz>0.00068557400486133398</izz>
+          </inertia>
+        </inertial>
+        <collision name='wrist1_Link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/wrist1_Link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='wrist1_Link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/wrist1_Link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+      <joint name='wrist2_joint' type='revolute'>
+        <pose relative_to='wrist1_Link'>0 0.10249999999999999 0 -1.5708 -1.8709000000000005e-15 -1.6652999999999974e-16</pose>
+        <parent>wrist1_Link</parent>
+        <child>wrist2_Link</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3.04</lower>
+            <upper>3.04</upper>
+            <effort>0</effort>
+            <velocity>0</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='wrist2_Link'>
+        <pose relative_to='wrist2_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>-7.5420762057863502e-07 -0.00624812542617262 -0.0039236746411568397 0 0 0</pose>
+          <mass>0.50047753924598803</mass>
+          <inertia>
+            <ixx>0.00071194605981828995</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000405882428755442</iyy>
+            <iyz>2.3080869451588599e-05</iyz>
+            <izz>0.00068557400511210702</izz>
+          </inertia>
+        </inertial>
+        <collision name='wrist2_Link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/wrist2_Link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='wrist2_Link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/wrist2_Link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+      <joint name='wrist3_joint' type='revolute'>
+        <pose relative_to='wrist2_Link'>0 -0.094 0 1.5708 0 1.7907000000000001e-15</pose>
+        <parent>wrist2_Link</parent>
+        <child>wrist3_Link</child>
+        <axis>
+          <xyz>0 0 1</xyz>
+          <limit>
+            <lower>-3.04</lower>
+            <upper>3.04</upper>
+            <effort>0</effort>
+            <velocity>0</velocity>
+          </limit>
+          <dynamics>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+        </axis>
+      </joint>
+      <link name='wrist3_Link'>
+        <pose relative_to='wrist3_joint'>0 0 0 0 0 0</pose>
+        <inertial>
+          <pose>3.9204877844993798e-10 0.000175788057281467 -0.021329449070668399 0 0 0</pose>
+          <mass>0.158309554874285</mass>
+          <inertia>
+            <ixx>7.3137619603476898e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>7.1952818887656298e-05</iyy>
+            <iyz>0</iyz>
+            <izz>0.000108772439051422</izz>
+          </inertia>
+        </inertial>
+        <collision name='wrist3_Link_collision'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/collision/wrist3_Link.STL</uri>
+            </mesh>
+          </geometry>
+        </collision>
+        <visual name='wrist3_Link_visual'>
+          <pose>0 0 0 0 0 0</pose>
+          <geometry>
+            <mesh>
+              <scale>1 1 1</scale>
+              <uri>/root/ros2_ws/src/aubo_description/meshes/aubo_i5/visual/wrist3_Link.DAE</uri>
+            </mesh>
+          </geometry>
+          <material>
+            <diffuse>1 1 1 1</diffuse>
+            <ambient>1 1 1 1</ambient>
+          </material>
+        </visual>
+      </link>
+    </model>
+
+  </world>
+</sdf>
