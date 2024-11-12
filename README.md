@@ -65,7 +65,7 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
 
 **NOTE**: Remember to source the setup file and the workspace whenever a new terminal is opened:
 
-Test sim:
-```bash
-ros2 launch aubo_i5 simulation.launch.py
-```
+    Test sim:
+    ```bash
+    ros2 launch aubo_i5 simulation.launch.py
+    ```
