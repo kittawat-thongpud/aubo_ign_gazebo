@@ -1,1 +1,71 @@
 # aubo_ign_gazebo
+
+
+## Compatibility
+
+| **Supported OS**          | **Supported ROS2 distribution**                         |
+|---------------------------|---------------------------------------------------------|
+| Ubuntu 22.04              | [Humble](https://docs.ros.org/en/humble/index.html) |
+
+To install Ignition Gazebo (now known as Gazebo Garden) for integrating ROS 2 Humble on Ubuntu 22.04 and using it with Aubo robot models i5 and i10, you'll need to install both ROS 2 Humble and Ignition Gazebo along with additional dependencies to support the Aubo robots. Here’s an installation guide to set up this environment:
+
+## Getting Started
+
+This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ubuntu and ROS2 may work, but are not officially supported.
+
+1. Install [ROS2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
+2. Install [Ignition Gazebo (Fortress)](https://gazebosim.org/docs/fortress/install_ubuntu/)
+
+3. Install `colcon` and additional ROS packages:
+
+    ```bash
+    sudo apt install -y \
+    python3-colcon-common-extensions \
+    python3-rosdep2 \
+    libeigen3-dev \
+    ros-humble-xacro \
+    ros-humble-tinyxml2-vendor \
+    ros-humble-ros2-control \
+    ros-humble-realtime-tools \
+    ros-humble-control-toolbox \
+    ros-humble-moveit \
+    ros-humble-ros2-controllers \
+    ros-humble-test-msgs \
+    ros-humble-joint-state-publisher \
+    ros-humble-joint-state-publisher-gui \
+    ros-humble-robot-state-publisher \
+    ros-humble-rviz2
+    ```
+
+3. Setup workspace:
+
+    ```bash
+    mkdir -p ~/aubo_ros2_ws/src
+    cd ~/aubo_ros2_ws/src
+    git clone -b humble https://github.com/kittawat-thongpud/aubo_ign_gazebo.git
+    cd aubo_robot_ros2/
+    ```
+
+4. Install dependencies:
+
+    ```bash
+    cd ~/aubo_ros2_ws
+    rosdep update
+    rosdep install --from-paths src --ignore-src --rosdistro humble -r -y
+    ```
+
+5. Build and source the workspace:
+
+    ```bash
+    cd ~/aubo_ros2_ws
+    source /opt/ros/humble/setup.bash
+    colcon build --symlink-install
+    source install/setup.bash
+    ```
+
+**NOTE**: Remember to source the setup file and the workspace whenever a new terminal is opened:
+
+Test sim:
+```bash
+ros2 launch aubo_i5 simulation.launch.py
+```
