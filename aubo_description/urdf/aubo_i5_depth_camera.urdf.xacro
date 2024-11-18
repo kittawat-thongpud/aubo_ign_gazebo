@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="aubo_i5">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro"  name="aubo_i5_depth_camera">
 
   <link name="base_link">
     <inertial>
@@ -208,6 +208,57 @@
     <child link="wrist3_Link" />
     <axis xyz="0 0 1" />
     <limit effort="56.0" lower="-3.04" upper="3.04" velocity="3.1416"/>
+  </joint>
+
+  <link name='depth_camera_link'>
+      
+    <inertial>
+      <origin xyz="0.0 0.0 0.0" rpy="0 0 0" />
+      <mass value="0.3" />
+      <inertia ixx="0.000150025" ixy="0" ixz="0" iyy="0.00074065" iyz="0" izz="0.0007706249999999999" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <geometry>
+        <mesh filename="file://$(find aubo_description)/meshes/3dCamera/3dCamera.DAE" />
+      </geometry>
+      <material name="depth_camera_material">
+        <texture filename="file://$(find aubo_description)/meshes/3dCamera/3dCamera.jpg" />
+      </material>
+    </visual>
+    
+    <collision name="collision_top">
+      <origin xyz="0 -0.02 0.034" rpy="0 0 0" />
+      <geometry>
+        <box>
+          <size xyz="0.165 0.040 0.030" rpy="0 0 0"/>
+        </box>
+      </geometry>
+    </collision>
+
+    <collision name="collision_base">
+      <origin xyz="0 -0.010 0.00725" rpy="0 0 0"/>
+      <geometry>
+        <box>
+          <size xyz="0.06 0.060 0.015" rpy="0 0 0"/>
+        </box>
+      </geometry>
+    </collision>
+    </link>
+    <joint name='depth_camera_fixed_joint' type='fixed'>
+      <origin xyz="0 0 0" rpy="-1.5708 0 0" />
+      <parent link="wrist3_Link"/>
+      <child link="depth_camera_link"/>
+      <axis xyz="0 0 1" />
+      <limit effort="12.0" lower="0" upper="0" velocity="0"/>
+    </joint>
+
+  <link name="depth_camera_optical_link" />
+
+  <joint name="depth_camera_optical_fixed_joint" type="fixed">
+    <parent link="depth_camera_link" />
+    <child link = "depth_camera_optical_link" />
+    <origin xyz="0.12 0.0 0.0" rpy="0 0 -1.570796" />
   </joint>
 
   <link name="world" />
