@@ -21,7 +21,7 @@ from launch.actions import RegisterEventHandler,TimerAction
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution,TextSubstitution
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
@@ -64,20 +64,10 @@ def generate_launch_description():
     xacro_file = os.path.join(get_package_share_directory('aubo_i5'),
                               'config',
                               'aubo_i5.urdf.xacro')
-    # Generate ROBOT_DESCRIPTION for UR10 ROBOT:
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name='xacro')]),
-            ' ',
-            PathJoinSubstitution(
-                [FindPackageShare('aubo_i5'),
-                 'config', 'aubo_i5.urdf']
-            ),
-        ]
-    )
-
-    robot_description = {'robot_description': robot_description_content}
-
+    
+    world_file = os.path.join(get_package_share_directory('aubo_i5'),
+                              'config',
+                              'world.sdf')
 
     # ***** STATIC TRANSFORM ***** #
     # Publish TF:
@@ -93,20 +83,6 @@ def generate_launch_description():
             },
         ],
     )
-    # MoveIt!2 Controllers:
-    moveit_simple_controllers_yaml = load_yaml("aubo_i5", "config/moveit_controllers.yaml")
-    moveit_controllers = {
-        "moveit_simple_controller_manager": moveit_simple_controllers_yaml,
-        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
-    }
-
-    planning_scene_monitor_parameters = {
-        "publish_planning_scene": True,
-        "publish_geometry_updates": True,
-        "publish_state_updates": True,
-        "publish_transforms_updates": True,
-    }
-    
     # Command-line argument: RVIZ file?
     rviz_parameters = [
         moveit_config.planning_pipelines,
@@ -120,21 +96,6 @@ def generate_launch_description():
         arguments=["-d", LaunchConfiguration("rviz_config")],
         parameters=rviz_parameters,
     )
-    
-    # ***** ROS2_CONTROL -> LOAD CONTROLLERS ***** #
-    # Joint STATE BROADCASTER:
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-    # Joint TRAJECTORY Controller:
-    joint_trajectory_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["aubo_i5_arm_controller", "-c", "/controller_manager"],
-    )
-
 
     gz_spawn_entity = Node(
         package='ros_gz_sim',
@@ -143,6 +104,7 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-name',
                    'aubo_i5', '-allow_renaming', 'true'],
     )
+
     should_publish = LaunchConfiguration("publish_monitored_planning_scene")
 
     move_group_configuration = {
@@ -154,6 +116,11 @@ def generate_launch_description():
         "publish_state_updates": should_publish,
         "publish_transforms_updates": should_publish,
         "monitor_dynamics": False,
+        
+        "moveit_manage_controllers": True,
+        "trajectory_execution.allowed_execution_duration_scaling": 1.2,
+        "trajectory_execution.allowed_goal_duration_margin": 0.5,
+        "trajectory_execution.allowed_start_tolerance": 0.01,
     }
     move_group_params = [
         moveit_config.to_dict(),
@@ -232,7 +199,11 @@ def generate_launch_description():
                 [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                        'launch',
                                        'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [' -r -v 4 empty.sdf'])]),
+            launch_arguments={
+            'gz_args': TextSubstitution(
+                text=f"-r -v 4 {world_file}"
+            )
+        }.items(),),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
@@ -251,7 +222,7 @@ def generate_launch_description():
                 on_exit=[
                         # MoveIt!2:
                             TimerAction(
-                                period=5.0,
+                                period=2.0,
                                 actions=[
                                     rviz_node_full,
                                     run_move_group_node
