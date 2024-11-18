@@ -65,7 +65,6 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
 
 **NOTE**: Remember to source the setup file and the workspace whenever a new terminal is opened:
 
-## Test sim:
 # Simulation aubo with ignition gazebo + moveit
 
 Change model to aubo_i5 or aubo_i10 to select model to run
@@ -77,4 +76,10 @@ ros2 launch <model> simulation.launch.py
 
 ```bash
 ros2 launch aubo_i5 simulation.launch.py
+```
+
+## Integrate Depth Camera
+
+```bash
+ros2 launch aubo_i5_depth simulation.launch.py
 ```
