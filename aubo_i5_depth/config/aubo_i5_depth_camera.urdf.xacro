@@ -1,0 +1,86 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="aubo_i5_depth_camera">
+    <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
+
+    <!-- Import aubo_i5_depth_camera urdf file -->
+    <xacro:include filename="$(find aubo_description)/urdf/aubo_i5_depth_camera.urdf.xacro" />
+
+    <!-- Import control_xacro -->
+    <xacro:include filename="aubo_i5_depth_camera.ros2_control.xacro" />
+
+    <xacro:aubo_i5_depth_camera_ros2_control name="IgnitionSystem" initial_positions_file="$(arg initial_positions_file)"/>
+
+    <gazebo>
+        <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+        <parameters>$(find aubo_i5_depth)/config/ros2_controllers.yaml</parameters>
+        </plugin>
+    </gazebo>
+    <gazebo reference="depth_camera_link">
+      <sensor type="depth_camera" name="depth_camera_link">
+        <pose>0.12 0 0 0 0 -1.57</pose>
+        <update_rate>5</update_rate>
+        <topic>depth_camera</topic>
+        <ignition_frame_id>depth_camera_optical_link</ignition_frame_id>
+        <camera>
+          <horizontal_fov>1.05</horizontal_fov>
+          <image>
+            <width>256</width>
+            <height>256</height>
+            <format>R_FLOAT32</format>
+          </image>
+          <clip>
+            <near>0.10000000000000001</near>
+            <far>10</far>
+          </clip>
+        </camera>
+      </sensor>
+      <sensor name="rgb_camera" type="camera">
+        <pose>0.12 0 0 0 0 -1.57</pose>
+          <camera>
+            <horizontal_fov>1.05</horizontal_fov>
+            <image>
+              <width>256</width>
+              <height>256</height>
+            </image>
+            <clip>
+              <near>0.1</near>
+              <far>100</far>
+            </clip>
+          </camera>
+          <always_on>1</always_on>
+          <update_rate>30</update_rate>
+          <visualize>true</visualize>
+          <topic>rgb_camera</topic>
+        </sensor>
+    </gazebo>
+    <!-- Adding the box -->
+    <link name="box_link">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <mass value="1.0"/>
+        <inertia ixx="0.01" ixy="0" ixz="0" iyy="0.01" iyz="0" izz="0.01"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="1 1 1"/>
+        </geometry>
+        <material name="blue">
+          <color rgba="0 0 1 1"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="1 1 2"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- Adding a joint to attach the box -->
+    <joint name="base_to_box" type="fixed">
+      <parent link="world"/>
+      <child link="box_link"/>
+      <origin xyz="0 -2 0" rpy="0 0 0"/>
+    </joint>
+</robot>
