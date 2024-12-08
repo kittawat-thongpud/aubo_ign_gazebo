@@ -33,6 +33,7 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
     python3-colcon-common-extensions \
     python3-rosdep2 \
     libeigen3-dev \
+    ros-humble-ign-ros2-control \
     ros-humble-xacro \
     ros-humble-tinyxml2-vendor \
     ros-humble-ros2-control \
