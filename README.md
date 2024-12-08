@@ -15,8 +15,18 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
 
 1. Install [ROS2 Humble](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debians.html)
 2. Install [Ignition Gazebo (Fortress)](https://gazebosim.org/docs/fortress/install_ubuntu/)
-
-3. Install `colcon` and additional ROS packages:
+3. Install Ros ignition bridge
+   Add https://packages.ros.org
+   ```bash
+    sudo sh -c 'echo "deb [arch=$(dpkg --print-architecture)] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" > /etc/apt/sources.list.d/ros2-latest.list'
+     curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add -
+     sudo apt-get update
+   ```
+   Install `ros_gz`
+   ```bash
+     sudo apt install ros-humble-ros-gz
+   ```
+4. Install `colcon` and additional ROS packages:
 
     ```bash
     sudo apt install -y \
@@ -37,7 +47,7 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
     ros-humble-rviz2
     ```
 
-3. Setup workspace:
+5. Setup workspace:
 
     ```bash
     mkdir -p ~/aubo_ros2_ws/src
@@ -46,7 +56,7 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
     cd aubo_robot_ros2/
     ```
 
-4. Install dependencies:
+6. Install dependencies:
 
     ```bash
     cd ~/aubo_ros2_ws
@@ -54,7 +64,7 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
     rosdep install --from-paths src --ignore-src --rosdistro humble -r -y
     ```
 
-5. Build and source the workspace:
+7. Build and source the workspace:
 
     ```bash
     cd ~/aubo_ros2_ws
