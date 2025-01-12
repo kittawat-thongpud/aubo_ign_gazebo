@@ -3,14 +3,14 @@ controller_manager:
   ros__parameters:
     update_rate: 100  # Hz
 
-    aubo_i5_arm_controller:
+    aubo_i5_depth_arm_controller:
       type: joint_trajectory_controller/JointTrajectoryController
 
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
 
-aubo_i5_arm_controller:
+aubo_i5_depth_arm_controller:
   ros__parameters:
     joints:
       - shoulder_joint

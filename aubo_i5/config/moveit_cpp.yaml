@@ -1,0 +1,2 @@
+planning_scene_monitor_options:
+  joint_state_topic: "aubo_i5/joint_states"

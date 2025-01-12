@@ -9,7 +9,7 @@ controller_manager:
 
     joint_state_broadcaster:
       type: joint_state_broadcaster/JointStateBroadcaster
-
+      
 aubo_i5_arm_controller:
   ros__parameters:
     joints:
@@ -20,9 +20,7 @@ aubo_i5_arm_controller:
       - wrist2_joint
       - wrist3_joint
     command_interfaces:
-      - position  
+      - position
     state_interfaces:
       - position
       - velocity
-    state_publish_rate: 100.0
-    action_monitor_rate: 20.0

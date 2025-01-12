@@ -1,0 +1,106 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+    <xacro:macro name="aubo_i10_depth_camera_ros2_control" params="name initial_positions_file use_sim_model">
+        <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
+
+        <xacro:if value="${use_sim_model}">
+            <gazebo>
+                <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+                <parameters>$(find aubo_i10_depth)/config/ros2_controllers.yaml</parameters>
+                </plugin>
+            </gazebo>
+            <gazebo reference="depth_camera_link">
+              <sensor type="depth_camera" name="depth_camera_link">
+                <pose>0.12 0 0 0 0 -1.57</pose>
+                <update_rate>5</update_rate>
+                <topic>depth_camera</topic>
+                <ignition_frame_id>depth_camera_optical_link</ignition_frame_id>
+                <camera>
+                  <horizontal_fov>1.05</horizontal_fov>
+                  <image>
+                    <width>256</width>
+                    <height>256</height>
+                    <format>R_FLOAT32</format>
+                  </image>
+                  <clip>
+                    <near>0.10000000000000001</near>
+                    <far>10</far>
+                  </clip>
+                </camera>
+              </sensor>
+              <sensor name="rgb_camera" type="camera">
+                <pose>0.12 0 0 0 0 -1.57</pose>
+                  <camera>
+                    <horizontal_fov>1.05</horizontal_fov>
+                    <image>
+                      <width>256</width>
+                      <height>256</height>
+                    </image>
+                    <clip>
+                      <near>0.1</near>
+                      <far>100</far>
+                    </clip>
+                  </camera>
+                  <always_on>1</always_on>
+                  <update_rate>30</update_rate>
+                  <visualize>true</visualize>
+                  <topic>rgb_camera</topic>
+                </sensor>
+            </gazebo>
+        </xacro:if>
+
+        <ros2_control name="${name}" type="system">
+            <hardware>
+              <xacro:if value="${use_sim_model}">
+                <plugin>ign_ros2_control/IgnitionSystem</plugin>
+              </xacro:if>
+              <xacro:unless value="${use_sim_model}">
+                <plugin>mock_components/GenericSystem</plugin>
+              </xacro:unless>
+            </hardware>
+            <joint name="shoulder_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['shoulder_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="upperArm_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['upperArm_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="foreArm_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['foreArm_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="wrist1_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['wrist1_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="wrist2_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['wrist2_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+            <joint name="wrist3_joint">
+                <command_interface name="position"/>
+                <state_interface name="position">
+                  <param name="initial_value">${initial_positions['wrist3_joint']}</param>
+                </state_interface>
+                <state_interface name="velocity"/>
+            </joint>
+
+        </ros2_control>
+    </xacro:macro>
+</robot>

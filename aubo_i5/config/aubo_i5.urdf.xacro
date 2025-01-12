@@ -1,18 +1,17 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="aubo_i5">
+    
+    <xacro:arg name="use_sim_model" default="true"/>
+
     <xacro:arg name="initial_positions_file" default="initial_positions.yaml" />
 
     <!-- Import aubo_i5 urdf file -->
     <xacro:include filename="$(find aubo_description)/urdf/aubo_i5.urdf.xacro" />
 
     <!-- Import control_xacro -->
-    <xacro:include filename="aubo_i5.ros2_control.xacro" />
+    <xacro:include filename="aubo_i5.ros2_control.xacro"/>
 
 
-    <xacro:aubo_i5_ros2_control name="IgnitionSystem" initial_positions_file="$(arg initial_positions_file)"/>
-    <gazebo>
-        <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
-        <parameters>$(find aubo_i5)/config/ros2_controllers.yaml</parameters>
-        </plugin>
-    </gazebo>
+    <xacro:aubo_i5_ros2_control name="Aubosystem" initial_positions_file="$(arg initial_positions_file)" use_sim_model="$(arg use_sim_model)"/>
+    
 </robot>

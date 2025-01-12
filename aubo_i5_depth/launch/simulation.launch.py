@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import xacro
-import yaml
+from pathlib import Path
+import json
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
@@ -26,48 +26,58 @@ from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from moveit_configs_utils import MoveItConfigsBuilder
+from launch_param_builder import ParameterBuilder, load_yaml, load_xacro
 from moveit_configs_utils.launches import generate_demo_launch
 from moveit_configs_utils.launch_utils import (
     add_debuggable_node,
     DeclareBooleanLaunchArg,
 )
 # LOAD FILE:
-def load_file(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path, 'r') as file:
-            return file.read()
-    except EnvironmentError:
-        # parent of IOError, OSError *and* WindowsError where available.
-        return None
-
-# LOAD YAML:
-def load_yaml(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path, 'r') as file:
-            return yaml.safe_load(file)
-    except EnvironmentError:
-        # parent of IOError, OSError *and* WindowsError where available.
-        return None
-
 def generate_launch_description():
-    moveit_config = MoveItConfigsBuilder("aubo_i5_depth_camera", package_name="aubo_i5_depth").to_moveit_configs()
+    package_name = "aubo_i5_depth"
+    package_path = Path(get_package_share_directory(package_name))
+    moveit_config = (
+                    MoveItConfigsBuilder("aubo_i5_depth", package_name=package_name,robot_description="robot_description")
+                    .robot_description(file_path="config/aubo_i5_depth_camera.urdf.xacro")
+                    .robot_description_semantic(file_path="config/aubo_i5_depth_camera.srdf")
+                    .robot_description_kinematics(file_path="config/kinematics.yaml")
+                    .joint_limits(file_path="config/joint_limits.yaml")
+                    .trajectory_execution(file_path="config/moveit_controllers.yaml",
+                                          moveit_manage_controllers = True)
+                    .planning_scene_monitor(
+                                            publish_planning_scene = True,
+                                            publish_geometry_updates = True,
+                                            publish_state_updates = True,
+                                            publish_transforms_updates = True,
+                                            publish_robot_description = True,
+                                            publish_robot_description_semantic = True,
+                                            )
+                    .sensors_3d(file_path="config/sensors_3d.yaml")
+                    .planning_pipelines(default_planning_pipeline = "ompl",
+                                        pipelines =['ompl','pilz_industrial_motion_planner','chomp'],
+                                        )
+                    .pilz_cartesian_limits(file_path="config/pilz_cartesian_limits.yaml")
+                    .to_moveit_configs()
+                    )
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
 
     publish_frequency = LaunchConfiguration('publish_frequency', default="15.0")
     allow_trajectory_execution = LaunchConfiguration('allow_trajectory_execution')
     
-    world_file = os.path.join(get_package_share_directory('aubo_i5_depth'),
-                              'config',
-                              'world.sdf')
+    # Add Re-format kinematics
+    robot_description_kinematics = {}
+    robot_description_kinematics.update(load_yaml(package_path/("config/kinematics.yaml")))
+    print(robot_description_kinematics)
+    world_file = str(package_path/'config/world.sdf')
     
-
+    warehouse_ros_config = {
+        "warehouse_plugin": "warehouse_ros_sqlite::DatabaseConnection",
+        "warehouse_host": str(package_path/'data/ros2.sqlite'),
+    }
     # ***** STATIC TRANSFORM ***** #
     # Publish TF:
+    
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -77,13 +87,18 @@ def generate_launch_description():
             moveit_config.robot_description,
             {
                 "publish_frequency": publish_frequency,
+                "use_sim_time": use_sim_time
             },
         ],
     )
     # Command-line argument: RVIZ file?
     rviz_parameters = [
-        moveit_config.planning_pipelines,
+        moveit_config.robot_description,
+        moveit_config.robot_description_semantic,
         moveit_config.robot_description_kinematics,
+        moveit_config.planning_pipelines,
+        warehouse_ros_config,
+        {"use_sim_time": use_sim_time}, 
     ]
     rviz_node_full = Node(
         package="rviz2",
@@ -102,27 +117,10 @@ def generate_launch_description():
                    'aubo_i5_depth', '-allow_renaming', 'true'],
     )
 
-    should_publish = LaunchConfiguration("publish_monitored_planning_scene")
-
-    move_group_configuration = {
-        "publish_robot_description_semantic": True,
-        "allow_trajectory_execution": allow_trajectory_execution,
-        # Publish the planning scene of the physical robot so that rviz plugin can know actual robot
-        "publish_planning_scene": should_publish,
-        "publish_geometry_updates": should_publish,
-        "publish_state_updates": should_publish,
-        "publish_transforms_updates": should_publish,
-        "monitor_dynamics": False,
-        
-        "moveit_manage_controllers": True,
-        "trajectory_execution.allowed_execution_duration_scaling": 1.2,
-        "trajectory_execution.allowed_goal_duration_margin": 0.5,
-        "trajectory_execution.allowed_start_tolerance": 0.01,
-    }
     move_group_params = [
         moveit_config.to_dict(),
-        move_group_configuration,
-        {"use_sim_time": True}, 
+        warehouse_ros_config,
+        {"use_sim_time": use_sim_time}, 
     ]
 
     run_move_group_node = Node(
@@ -131,25 +129,15 @@ def generate_launch_description():
         output="screen",
         parameters=move_group_params,
         )
-    """
-    parameters=[
-        robot_description,
-        robot_description_semantic,
-        kinematics_yaml,
-        moveit_simple_controllers_yaml,
-        planning_scene_monitor_parameters,
-        {"use_sim_time": True}, 
-    ],
-    )"""
     load_joint_state_broadcaster = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
              'joint_state_broadcaster'],
         output='screen'
     )
 
-    aubo_i5_arm_controller = ExecuteProcess(
+    aubo_i5_depth_arm_controller = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
-             'aubo_i5_arm_controller'],
+             'aubo_i5_depth_arm_controller'],
         output='screen'
     )
 
@@ -160,7 +148,6 @@ def generate_launch_description():
         arguments=['/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock'],
         output='screen'
     )
-
     rgb_camera_bridge = Node(
         package='ros_gz_bridge',
         executable='parameter_bridge',
@@ -179,6 +166,14 @@ def generate_launch_description():
         arguments=['/depth_camera/points@sensor_msgs/msg/PointCloud2[ignition.msgs.PointCloudPacked'],
         output='screen'
     )
+
+    '''
+    try:
+        with open("/home/kittawat/ros2_ws/src/aubo_ign_gazebo/aubo_i5_depth/save.json", 'w') as file:
+            json.dump(moveit_config.to_dict(), file, indent=4)  # Save the dictionary as a formatted JSON
+    except Exception as e:
+        print(f"An error occurred while saving the file: {e}")
+    '''
     return LaunchDescription([
         # Launch Arguments
         DeclareLaunchArgument(
@@ -204,6 +199,9 @@ def generate_launch_description():
             "debug", 
             default_value=False),
         bridge,
+        rgb_camera_bridge,
+        depth_camera_bridge,
+        points_camera_bridge,
         # ROS2_CONTROL:
         robot_state_publisher,
         gz_spawn_entity,
@@ -221,18 +219,18 @@ def generate_launch_description():
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,
-                on_exit=[load_joint_state_broadcaster,rgb_camera_bridge,depth_camera_bridge,points_camera_bridge],
+                on_exit=[load_joint_state_broadcaster],
             )
         ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=load_joint_state_broadcaster,
-                on_exit=[aubo_i5_arm_controller],
+                on_exit=[aubo_i5_depth_arm_controller],
             )
         ),
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=aubo_i5_arm_controller,
+                target_action=aubo_i5_depth_arm_controller,
                 on_exit=[
                         # MoveIt!2:
                             TimerAction(

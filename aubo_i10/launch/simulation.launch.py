@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import os
-import xacro
-import yaml
+from pathlib import Path
+import json
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, ExecuteProcess, IncludeLaunchDescription
@@ -21,66 +21,62 @@ from launch.actions import RegisterEventHandler,TimerAction
 from launch.event_handlers import OnProcessExit
 from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution
+from launch.substitutions import Command, FindExecutable, LaunchConfiguration, PathJoinSubstitution,TextSubstitution
 from launch_ros.parameter_descriptions import ParameterValue
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 from moveit_configs_utils import MoveItConfigsBuilder
+from launch_param_builder import ParameterBuilder, load_yaml, load_xacro
 from moveit_configs_utils.launches import generate_demo_launch
 from moveit_configs_utils.launch_utils import (
     add_debuggable_node,
     DeclareBooleanLaunchArg,
 )
 # LOAD FILE:
-def load_file(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path, 'r') as file:
-            return file.read()
-    except EnvironmentError:
-        # parent of IOError, OSError *and* WindowsError where available.
-        return None
-
-# LOAD YAML:
-def load_yaml(package_name, file_path):
-    package_path = get_package_share_directory(package_name)
-    absolute_file_path = os.path.join(package_path, file_path)
-    try:
-        with open(absolute_file_path, 'r') as file:
-            return yaml.safe_load(file)
-    except EnvironmentError:
-        # parent of IOError, OSError *and* WindowsError where available.
-        return None
-
 def generate_launch_description():
-    moveit_config = MoveItConfigsBuilder("aubo_i10", package_name="aubo_i10").to_moveit_configs()
+    package_name = "aubo_i10"
+    package_path = Path(get_package_share_directory(package_name))
+    moveit_config = (
+                    MoveItConfigsBuilder("aubo_i10", package_name=package_name,robot_description="robot_description")
+                    .robot_description(file_path="config/aubo_i10.urdf.xacro")
+                    .robot_description_semantic(file_path="config/aubo_i10.srdf")
+                    .robot_description_kinematics(file_path="config/kinematics.yaml")
+                    .joint_limits(file_path="config/joint_limits.yaml")
+                    .trajectory_execution(file_path="config/moveit_controllers.yaml",
+                                          moveit_manage_controllers = True)
+                    .planning_scene_monitor(
+                                            publish_planning_scene = True,
+                                            publish_geometry_updates = True,
+                                            publish_state_updates = True,
+                                            publish_transforms_updates = True,
+                                            publish_robot_description = True,
+                                            publish_robot_description_semantic = True,
+                                            )
+                    .sensors_3d(file_path="config/sensors_3d.yaml")
+                    .planning_pipelines(default_planning_pipeline = "ompl",
+                                        pipelines =['ompl','pilz_industrial_motion_planner','chomp'],
+                                        )
+                    .pilz_cartesian_limits(file_path="config/pilz_cartesian_limits.yaml")
+                    .to_moveit_configs()
+                    )
     # Launch Arguments
     use_sim_time = LaunchConfiguration('use_sim_time', default=True)
 
     publish_frequency = LaunchConfiguration('publish_frequency', default="15.0")
     allow_trajectory_execution = LaunchConfiguration('allow_trajectory_execution')
     
-    xacro_file = os.path.join(get_package_share_directory('aubo_i10'),
-                              'config',
-                              'aubo_i10.urdf.xacro')
-    # Generate ROBOT_DESCRIPTION for UR10 ROBOT:
-    robot_description_content = Command(
-        [
-            PathJoinSubstitution([FindExecutable(name='xacro')]),
-            ' ',
-            PathJoinSubstitution(
-                [FindPackageShare('aubo_i10'),
-                 'config', 'aubo_i10.urdf']
-            ),
-        ]
-    )
-
-    robot_description = {'robot_description': robot_description_content}
-
-
+    # Add Re-format kinematics
+    robot_description_kinematics = {}
+    robot_description_kinematics.update(load_yaml(package_path/("config/kinematics.yaml")))
+    print(robot_description_kinematics)
+    world_file = str(package_path/'config/world.sdf')
+    warehouse_ros_config = {
+        "warehouse_plugin": "warehouse_ros_sqlite::DatabaseConnection",
+        "warehouse_host": str(package_path/'data/ros2.sqlite'),
+    }
     # ***** STATIC TRANSFORM ***** #
     # Publish TF:
+    
     robot_state_publisher = Node(
         package="robot_state_publisher",
         executable="robot_state_publisher",
@@ -90,27 +86,18 @@ def generate_launch_description():
             moveit_config.robot_description,
             {
                 "publish_frequency": publish_frequency,
+                "use_sim_time": use_sim_time
             },
         ],
     )
-    # MoveIt!2 Controllers:
-    moveit_simple_controllers_yaml = load_yaml("aubo_i10", "config/moveit_controllers.yaml")
-    moveit_controllers = {
-        "moveit_simple_controller_manager": moveit_simple_controllers_yaml,
-        "moveit_controller_manager": "moveit_simple_controller_manager/MoveItSimpleControllerManager",
-    }
-
-    planning_scene_monitor_parameters = {
-        "publish_planning_scene": True,
-        "publish_geometry_updates": True,
-        "publish_state_updates": True,
-        "publish_transforms_updates": True,
-    }
-    
     # Command-line argument: RVIZ file?
     rviz_parameters = [
-        moveit_config.planning_pipelines,
+        moveit_config.robot_description,
+        moveit_config.robot_description_semantic,
         moveit_config.robot_description_kinematics,
+        moveit_config.planning_pipelines,
+        warehouse_ros_config,
+        {"use_sim_time": use_sim_time}, 
     ]
     rviz_node_full = Node(
         package="rviz2",
@@ -120,21 +107,6 @@ def generate_launch_description():
         arguments=["-d", LaunchConfiguration("rviz_config")],
         parameters=rviz_parameters,
     )
-    
-    # ***** ROS2_CONTROL -> LOAD CONTROLLERS ***** #
-    # Joint STATE BROADCASTER:
-    joint_state_broadcaster_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["joint_state_broadcaster", "--controller-manager", "/controller_manager"],
-    )
-    # Joint TRAJECTORY Controller:
-    joint_trajectory_controller_spawner = Node(
-        package="controller_manager",
-        executable="spawner",
-        arguments=["aubo_i10_arm_controller", "-c", "/controller_manager"],
-    )
-
 
     gz_spawn_entity = Node(
         package='ros_gz_sim',
@@ -143,22 +115,11 @@ def generate_launch_description():
         arguments=['-topic', 'robot_description', '-name',
                    'aubo_i10', '-allow_renaming', 'true'],
     )
-    should_publish = LaunchConfiguration("publish_monitored_planning_scene")
 
-    move_group_configuration = {
-        "publish_robot_description_semantic": True,
-        "allow_trajectory_execution": allow_trajectory_execution,
-        # Publish the planning scene of the physical robot so that rviz plugin can know actual robot
-        "publish_planning_scene": should_publish,
-        "publish_geometry_updates": should_publish,
-        "publish_state_updates": should_publish,
-        "publish_transforms_updates": should_publish,
-        "monitor_dynamics": False,
-    }
     move_group_params = [
         moveit_config.to_dict(),
-        move_group_configuration,
-        {"use_sim_time": True}, 
+        warehouse_ros_config,
+        {"use_sim_time": use_sim_time}, 
     ]
 
     run_move_group_node = Node(
@@ -167,16 +128,6 @@ def generate_launch_description():
         output="screen",
         parameters=move_group_params,
         )
-    """
-    parameters=[
-        robot_description,
-        robot_description_semantic,
-        kinematics_yaml,
-        moveit_simple_controllers_yaml,
-        planning_scene_monitor_parameters,
-        {"use_sim_time": True}, 
-    ],
-    )"""
     load_joint_state_broadcaster = ExecuteProcess(
         cmd=['ros2', 'control', 'load_controller', '--set-state', 'active',
              'joint_state_broadcaster'],
@@ -197,7 +148,13 @@ def generate_launch_description():
         output='screen'
     )
 
-    
+    '''
+    try:
+        with open("/home/kittawat/ros2_ws/src/aubo_ign_gazebo/aubo_i10/save.json", 'w') as file:
+            json.dump(moveit_config.to_dict(), file, indent=4)  # Save the dictionary as a formatted JSON
+    except Exception as e:
+        print(f"An error occurred while saving the file: {e}")
+    '''
     return LaunchDescription([
         # Launch Arguments
         DeclareLaunchArgument(
@@ -232,7 +189,11 @@ def generate_launch_description():
                 [PathJoinSubstitution([FindPackageShare('ros_gz_sim'),
                                        'launch',
                                        'gz_sim.launch.py'])]),
-            launch_arguments=[('gz_args', [' -r -v 4 empty.sdf'])]),
+            launch_arguments={
+            'gz_args': TextSubstitution(
+                text=f"-r -v 4 {world_file}"
+            )
+        }.items(),),
         RegisterEventHandler(
             event_handler=OnProcessExit(
                 target_action=gz_spawn_entity,

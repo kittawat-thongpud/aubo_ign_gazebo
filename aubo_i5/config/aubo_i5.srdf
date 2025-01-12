@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" ?>
 <!--This does not replace URDF, and is not an extension of URDF.
     This is a format for representing semantic information about the robot structure.
     A URDF file must exist for this robot as well, where the joints and the links that are referenced are defined
@@ -16,6 +16,7 @@
         <joint name="wrist1_joint"/>
         <joint name="wrist2_joint"/>
         <joint name="wrist3_joint"/>
+        <chain base_link="base_link" tip_link="wrist3_Link"/>
     </group>
     <!--GROUP STATES: Purpose: Define a named state for a particular group, in terms of joint values. This is useful to define states like 'folded arms'-->
     <group_state name="origin" group="aubo_i5_arm">
@@ -26,6 +27,8 @@
         <joint name="wrist2_joint" value="0"/>
         <joint name="wrist3_joint" value="0"/>
     </group_state>
+    <!--VIRTUAL JOINT: Purpose: this element defines a virtual joint between a robot link and an external frame of reference (considered fixed with respect to the robot)-->
+    <virtual_joint name="base_virtual_joint" type="fixed" parent_frame="base_link" child_link="world"/>
     <!--DISABLE COLLISIONS: By default it is assumed that any link of the robot could potentially come into collision with any other link in the robot. This tag disables collision checking between a specified pair of links. -->
     <disable_collisions link1="base_link" link2="shoulder_Link" reason="Adjacent"/>
     <disable_collisions link1="base_link" link2="upperArm_Link" reason="Never"/>

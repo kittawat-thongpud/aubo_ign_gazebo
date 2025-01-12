@@ -236,7 +236,29 @@
     <limit effort="56.0" lower="-3.04" upper="3.04" velocity="3.1416"/>
   </joint>
 
-  <link name="world"/>
+  <link name="world">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <mass value="0.0" /> <!-- Massless world link -->
+      <inertia ixx="0" ixy="0" ixz="0" iyy="0" iyz="0" izz="0" />
+    </inertial>
+    <visual>
+      <origin xyz="0 0 -0.001" rpy="0 0 0" />
+      <geometry>
+        <box size="10 10 0.002" /> <!-- Represents a 10x10m flat plane -->
+      </geometry>
+      <material name="gray">
+        <color rgba="0.5 0.5 0.5 1" />
+      </material>
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.001" rpy="0 0 0" />
+      <geometry>
+        <box size="10 10 0.002" /> <!-- Matches the visual geometry -->
+      </geometry>
+    </collision>
+  </link>
+  
   <joint name="world_joint" type="fixed">
     <parent link="world"/>
     <child link="base_link"/>

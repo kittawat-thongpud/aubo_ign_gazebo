@@ -1,13 +1,24 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-    <xacro:macro name="aubo_i5_ros2_control" params="name initial_positions_file">
+    <xacro:macro name="aubo_i5_ros2_control" params="name initial_positions_file use_sim_model">
         <xacro:property name="initial_positions" value="${load_yaml(initial_positions_file)['initial_positions']}"/>
+        
+        <xacro:if value="${use_sim_model}">
+            <gazebo>
+                <plugin filename="ign_ros2_control-system" name="ign_ros2_control::IgnitionROS2ControlPlugin">
+                <parameters>$(find aubo_i5)/config/ros2_controllers.yaml</parameters>
+                </plugin>
+            </gazebo>
+        </xacro:if>
 
         <ros2_control name="${name}" type="system">
             <hardware>
-                <!-- By default, set up controllers for simulation. This won't work on real hardware -->
-                <!-- plugin>mock_components/GenericSystem</plugin -->
+              <xacro:if value="${use_sim_model}">
                 <plugin>ign_ros2_control/IgnitionSystem</plugin>
+              </xacro:if>
+              <xacro:unless value="${use_sim_model}">
+                <plugin>mock_components/GenericSystem</plugin>
+              </xacro:unless>
             </hardware>
             <joint name="shoulder_joint">
                 <command_interface name="position"/>

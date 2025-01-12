@@ -1,0 +1,25 @@
+moveit_setup_assistant_config:
+  urdf:
+    package: aubo_description
+    relative_path: urdf/aubo_i10_depth_camera.urdf.xacro
+  srdf:
+    relative_path: config/aubo_i10_depth_camera.srdf
+  package_settings:
+    author_name: kittawat thongpud
+    author_email: thongpud.k@gmail.com
+    generated_timestamp: 1736693857
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity
+  modified_urdf:
+    xacros:
+      - control_xacro
+  control_xacro:
+    command:
+      - position
+    state:
+      - position
+      - velocity

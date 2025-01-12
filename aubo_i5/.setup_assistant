@@ -7,7 +7,7 @@ moveit_setup_assistant_config:
   package_settings:
     author_name: Kittawat Thongpud
     author_email: Thongpud.k@gmail.com
-    generated_timestamp: 1731361403
+    generated_timestamp: 1734191717
   control_xacro:
     command:
       - position
