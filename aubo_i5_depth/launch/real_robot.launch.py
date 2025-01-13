@@ -167,11 +167,11 @@ def generate_launch_description():
             default_value=False),
         # ROS2_CONTROL:
         aubo_driver_node,
+        run_move_group_node,
         RegisterEventHandler(
             event_handler=OnProcessExit(
-                target_action=aubo_driver_node,
+                target_action=run_move_group_node,
                 on_exit=[aubo_trajectory_action_node,
-                         run_move_group_node,
                          robot_state_publisher,
                          rviz_node_full],
             )
