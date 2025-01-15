@@ -23,7 +23,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 
-add_executable(aubo_controller src/util.cpp main/main.cpp main/driver_sdk.cpp)
+add_executable(aubo_controller src/util.cpp main/main.cpp main/driver_sdk_copy.cpp)
 
 target_include_directories(aubo_controller
   PRIVATE
