@@ -29,9 +29,9 @@ using namespace std;
 
 namespace aubo_ros2_driver {
     constexpr int ARM_DOF = 6; // Define based on your robot's degrees of freedom
-    constexpr double MAX_JOINT_ACC = 10.0/180.0*M_PI;
-    constexpr double MAX_JOINT_VEL = 10.0/180.0*M_PI;
-    constexpr int UPDATE_RATE_ = 500;
+    constexpr double MAX_JOINT_ACC = 50.0/180.0*M_PI;
+    constexpr double MAX_JOINT_VEL = 50.0/180.0*M_PI;
+    constexpr int UPDATE_RATE_ = 10;
     constexpr int MINIMUM_BUFFER_SIZE = 300;
     const std::string joint_name_[ARM_DOF] = {"shoulder_joint","upperArm_joint","foreArm_joint","wrist1_joint","wrist2_joint","wrist3_joint"};
 
