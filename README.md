@@ -54,7 +54,7 @@ This project was developed for ROS2 Humble on Ubuntu 22.04. Other versions of Ub
     mkdir -p ~/aubo_ros2_ws/src
     cd ~/aubo_ros2_ws/src
     git clone -b humble https://github.com/kittawat-thongpud/aubo_ign_gazebo.git
-    cd aubo_robot_ros2/
+    cd ~/aubo_ros2_ws
     ```
 
 6. Install dependencies:
