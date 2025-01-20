@@ -15,7 +15,7 @@
   <depend>control_msgs</depend>
   <depend>trajectory_msgs</depend>
   <depend>sensor_msgs</depend>
-
+  <depend>aubo_ros2_common</depend>
   <export>
     <build_type>ament_cmake</build_type>
   </export>
