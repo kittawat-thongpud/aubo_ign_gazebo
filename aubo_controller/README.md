@@ -10,4 +10,4 @@
 
 **NOTE**: Export Library file
 
-export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/ros2_ws/install/aubo_controller/lib/aubo_controller/lib/linux_x64
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:~/aubo_ros2_ws/install/aubo_controller/lib/aubo_controller/lib/linux_x64
